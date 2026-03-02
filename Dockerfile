@@ -16,6 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
 
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sockets
 
+ARG INSTALL_XDEBUG=true
+RUN if [ ${INSTALL_XDEBUG} = true ]; then \
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug \
+;fi
+
+COPY docker/php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN useradd -G www-data,root -u $uid -d /home/$user $user
