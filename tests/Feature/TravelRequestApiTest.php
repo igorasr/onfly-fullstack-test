@@ -7,6 +7,7 @@ use App\Models\TravelRequest;
 use App\Models\User;
 use App\Notifications\TravelRequestStatusUpdatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -59,8 +60,8 @@ class TravelRequestApiTest extends TestCase
             ->getJson("/api/travel-requests/{$travelRequest->id}");
 
         $response
-            ->assertOk()
-            ->assertJsonPath('id', $travelRequest->id);
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.id', $travelRequest->id);
     }
 
     public function test_user_can_filter_travel_requests_by_status_destination_and_period(): void
@@ -140,8 +141,8 @@ class TravelRequestApiTest extends TestCase
             ]);
 
         $response
-            ->assertOk()
-            ->assertJsonPath('status', TravelRequestStatus::Approved->value);
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.status', TravelRequestStatus::Approved->value);
 
         Notification::assertSentTo($requester, TravelRequestStatusUpdatedNotification::class);
     }
@@ -184,6 +185,6 @@ class TravelRequestApiTest extends TestCase
                 'status' => TravelRequestStatus::Cancelled->value,
             ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 }

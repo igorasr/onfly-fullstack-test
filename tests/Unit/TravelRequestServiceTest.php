@@ -24,7 +24,7 @@ class TravelRequestServiceTest extends TestCase
         $this->assertTrue($service->canUpdateStatus($admin, $travelRequest));
     }
 
-    public function test_non_admin_cannot_update_status(): void
+    public function test_non_admin_cannot_update_status_even_if_not_requester(): void
     {
         $service = new TravelRequestService;
 

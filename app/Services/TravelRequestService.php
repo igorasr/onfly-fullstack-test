@@ -52,8 +52,8 @@ class TravelRequestService
         if (! $this->canTransitionStatus($travelRequest->status, $newStatus)) {
             throw new InvalidStatusTransition($travelRequest->status->value, $newStatus->value);
         }
-            
-        $travelRequest->update(['status' => $newStatus]);
+
+        $travelRequest->setStatus($newStatus)->save();
 
         $travelRequest->requester?->notify(new TravelRequestStatusUpdatedNotification($travelRequest));
 
