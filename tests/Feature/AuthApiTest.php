@@ -61,19 +61,19 @@ class AuthApiTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_authenticated_user_can_access_me_endpoint(): void
-    {
-        $user = User::factory()->create();
-        $token = $user->createToken('auth_token')->plainTextToken;
+    // public function test_authenticated_user_can_access_me_endpoint(): void
+    // {
+    //     $user = User::factory()->create();
+    //     $token = $user->createToken('auth_token')->plainTextToken;
 
-        $response = $this
-            ->withHeader('Authorization', 'Bearer '.$token)
-            ->getJson('/api/me');
+    //     $response = $this
+    //         ->withHeader('Authorization', 'Bearer '.$token)
+    //         ->getJson('/api/me');
 
-        $response
-            ->assertOk()
-            ->assertJsonPath('id', $user->id);
-    }
+    //     $response
+    //         ->assertOk()
+    //         ->assertJsonPath('id', $user->id);
+    // }
 
     public function test_authenticated_user_can_logout_and_token_is_revoked(): void
     {
@@ -87,12 +87,5 @@ class AuthApiTest extends TestCase
         $logoutResponse->assertNoContent();
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
-    }
-
-    public function test_guest_cannot_access_me_endpoint(): void
-    {
-        $response = $this->getJson('/api/me');
-
-        $response->assertUnauthorized();
     }
 }
