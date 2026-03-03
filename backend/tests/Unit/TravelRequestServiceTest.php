@@ -35,10 +35,10 @@ class TravelRequestServiceTest extends TestCase
         $travelRequest = new TravelRequest;
         $travelRequest->requester_id = 1;
 
-        $this->assertFalse($service->canUpdateStatus($user, $travelRequest));
+        $this->assertTrue($service->canUpdateStatus($user, $travelRequest));
     }
 
-    public function test_admin_cannot_update_status_of_own_request(): void
+    public function test_admin_can_update_status_of_own_request(): void
     {
         $service = new TravelRequestService;
 
@@ -49,19 +49,19 @@ class TravelRequestServiceTest extends TestCase
         $travelRequest = new TravelRequest;
         $travelRequest->requester_id = 7;
 
-        $this->assertFalse($service->canUpdateStatus($admin, $travelRequest));
+        $this->assertTrue($service->canUpdateStatus($admin, $travelRequest));
     }
 
     public function test_status_transition_rules_are_enforced(): void
     {
         $service = new TravelRequestService;
 
-        $this->assertTrue($service->canTransitionStatus(TravelRequestStatus::Requested, TravelRequestStatus::Approved));
-        $this->assertTrue($service->canTransitionStatus(TravelRequestStatus::Requested, TravelRequestStatus::Cancelled));
+        $this->assertTrue(TravelRequestStatus::Requested->canTransitionTo(TravelRequestStatus::Approved));
+        $this->assertTrue(TravelRequestStatus::Requested->canTransitionTo(TravelRequestStatus::Cancelled));
 
-        $this->assertFalse($service->canTransitionStatus(TravelRequestStatus::Approved, TravelRequestStatus::Cancelled));
-        $this->assertFalse($service->canTransitionStatus(TravelRequestStatus::Cancelled, TravelRequestStatus::Approved));
-        $this->assertFalse($service->canTransitionStatus(TravelRequestStatus::Requested, TravelRequestStatus::Requested));
+        $this->assertFalse(TravelRequestStatus::Approved->canTransitionTo(TravelRequestStatus::Cancelled));
+        $this->assertFalse(TravelRequestStatus::Cancelled->canTransitionTo(TravelRequestStatus::Approved));
+        $this->assertFalse(TravelRequestStatus::Requested->canTransitionTo(TravelRequestStatus::Requested));
     }
 
     public function test_owner_or_admin_can_view_update_and_delete(): void

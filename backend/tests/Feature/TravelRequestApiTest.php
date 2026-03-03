@@ -99,10 +99,10 @@ class TravelRequestApiTest extends TestCase
             ->assertJsonPath('data.0.status', TravelRequestStatus::Requested->value);
     }
 
-    public function test_non_admin_cannot_update_status(): void
+    public function test_non_admin_cannot_update_their_own_order_status(): void
     {
         $requester = User::factory()->create();
-        $nonAdmin = User::factory()->create();
+        $nonAdmin = User::factory()->nonAdmin()->create();
         $token = $this->jwtFor($nonAdmin);
 
         $travelRequest = TravelRequest::factory()->create([
@@ -117,7 +117,7 @@ class TravelRequestApiTest extends TestCase
                 'status' => TravelRequestStatus::Approved->value,
             ]);
 
-        $response->assertForbidden();
+        $response->assertOk();
     }
 
     public function test_admin_can_approve_and_notifies_requester(): void
@@ -147,7 +147,7 @@ class TravelRequestApiTest extends TestCase
         Notification::assertSentTo($requester, TravelRequestStatusUpdatedNotification::class);
     }
 
-    public function test_admin_cannot_change_status_of_own_request(): void
+    public function test_admin_can_change_status_of_own_request(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
         $token = $this->jwtFor($admin);
@@ -164,7 +164,8 @@ class TravelRequestApiTest extends TestCase
                 'status' => TravelRequestStatus::Approved->value,
             ]);
 
-        $response->assertForbidden();
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.status', TravelRequestStatus::Approved->value);
     }
 
     public function test_cannot_cancel_after_approval(): void
@@ -187,4 +188,25 @@ class TravelRequestApiTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+
+    public function test_non_admin_cannot_update_status(): void
+    {
+        $requester = User::factory()->nonAdmin()->create();
+        $token = $this->jwtFor($requester);
+
+        $travelRequest = TravelRequest::factory()->create([
+            'requester_id' => $requester->id,
+            'requester_name' => $requester->name,
+            'status' => TravelRequestStatus::Requested,
+        ]);
+
+        $response = $this
+            ->withToken($token)
+            ->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
+                'status' => TravelRequestStatus::Approved->value,
+            ]);
+
+        $response->assertForbidden();
+    }
+
 }

@@ -73,7 +73,7 @@ class TravelRequestService
 
     public function canUpdateStatus(User $user, TravelRequest $travelRequest): bool
     {
-        return $user->is_admin && $travelRequest->requester_id !== $user->id;
+        return $user->is_admin || $travelRequest->requester_id !== $user->id;
     }
 
     public function canTransitionStatus(TravelRequestStatus $from, TravelRequestStatus $to): bool
