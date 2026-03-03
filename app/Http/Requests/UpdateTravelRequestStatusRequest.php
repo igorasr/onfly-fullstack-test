@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Enums\TravelRequestStatus;
-use App\Models\TravelRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

@@ -49,7 +49,12 @@ class AuthController extends Controller
             'user' => $user,
         ]);
     }
-    
+
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json($request->user());
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->tokens()->delete();
