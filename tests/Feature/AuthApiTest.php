@@ -61,19 +61,19 @@ class AuthApiTest extends TestCase
         $response->assertStatus(422);
     }
 
-    // public function test_authenticated_user_can_access_me_endpoint(): void
-    // {
-    //     $user = User::factory()->create();
-    //     $token = $user->createToken('auth_token')->plainTextToken;
+    public function test_authenticated_user_can_access_me_endpoint(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-    //     $response = $this
-    //         ->withHeader('Authorization', 'Bearer '.$token)
-    //         ->getJson('/api/me');
+        $response = $this
+            ->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/me');
 
-    //     $response
-    //         ->assertOk()
-    //         ->assertJsonPath('id', $user->id);
-    // }
+        $response
+            ->assertOk()
+            ->assertJsonPath('id', $user->id);
+    }
 
     public function test_authenticated_user_can_logout_and_token_is_revoked(): void
     {
