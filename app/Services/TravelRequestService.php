@@ -1,7 +1,8 @@
 <?php
 
-namespace App;
+namespace App\Services;
 
+use App\DTOs\TravelRequestFiltersData;
 use App\Enums\TravelRequestStatus;
 use App\Exceptions\InvalidStatusTransition;
 use App\Models\TravelRequest;

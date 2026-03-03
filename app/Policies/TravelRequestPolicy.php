@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Models\TravelRequest;
 use App\Models\User;
-use App\TravelRequestService;
+use App\Services\TravelRequestService;
 
 class TravelRequestPolicy
 {

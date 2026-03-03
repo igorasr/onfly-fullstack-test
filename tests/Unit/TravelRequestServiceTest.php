@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use App\Enums\TravelRequestStatus;
 use App\Models\TravelRequest;
 use App\Models\User;
-use App\TravelRequestService;
+use App\Services\TravelRequestService;
 use PHPUnit\Framework\TestCase;
 
 class TravelRequestServiceTest extends TestCase

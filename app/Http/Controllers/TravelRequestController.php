@@ -9,8 +9,8 @@ use App\Http\Requests\UpdateTravelRequestRequest;
 use App\Http\Requests\UpdateTravelRequestStatusRequest;
 use App\Http\Resources\TravelRequestResource;
 use App\Models\TravelRequest;
-use App\TravelRequestFiltersData;
-use App\TravelRequestService;
+use App\DTOs\TravelRequestFiltersData;
+use App\Services\TravelRequestService;
 use Illuminate\Http\JsonResponse;
 
 class TravelRequestController extends Controller

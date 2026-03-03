@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Enums\TravelRequestStatus;
-use App\TravelRequestFiltersData;
+use App\DTOs\TravelRequestFiltersData;
 use PHPUnit\Framework\TestCase;
 
 class TravelRequestFiltersDataTest extends TestCase
