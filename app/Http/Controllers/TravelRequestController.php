@@ -12,6 +12,7 @@ use App\Models\TravelRequest;
 use App\DTOs\TravelRequestFiltersData;
 use App\Services\TravelRequestService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class TravelRequestController extends Controller
 {
@@ -34,21 +35,23 @@ class TravelRequestController extends Controller
 
     public function show(TravelRequest $travelRequest): JsonResponse
     {
-        return response()->json($travelRequest->load('requester'));
+        return new TravelRequestResource($travelRequest->load('requester'))->response();
     }
 
     public function update(UpdateTravelRequestRequest $request, TravelRequest $travelRequest): JsonResponse
     {
         $travelRequest = $this->travelRequestService->update($travelRequest, $request->validated());
 
-        return response()->json($travelRequest);
+        return new TravelRequestResource($travelRequest)
+            ->response()
+            ->setStatusCode(Response::HTTP_OK);
     }
 
     public function destroy(TravelRequest $travelRequest): JsonResponse
     {
         $this->travelRequestService->delete($travelRequest);
 
-        return response()->json(status: 204);
+        return response()->json(status: Response::HTTP_NO_CONTENT);
     }
 
     public function updateStatus(UpdateTravelRequestStatusRequest $request, TravelRequest $travelRequest): JsonResponse
@@ -56,6 +59,8 @@ class TravelRequestController extends Controller
         $newStatus = TravelRequestStatus::from($request->validated('status'));
         $travelRequest = $this->travelRequestService->updateStatus($travelRequest, $newStatus);
 
-        return response()->json($travelRequest, );
+        return new TravelRequestResource($travelRequest)
+            ->response()
+            ->setStatusCode(Response::HTTP_OK);
     }
 }
