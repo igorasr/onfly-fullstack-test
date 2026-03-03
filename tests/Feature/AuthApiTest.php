@@ -21,8 +21,13 @@ class AuthApiTest extends TestCase
         ]);
 
         $response
-            ->assertCreated()
-            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email']]);
+            ->assertOk()
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'user' => ['id', 'name', 'email'],
+                'authorization' => ['token', 'type'],
+            ]);
 
         $this->assertDatabaseHas('users', [
             'email' => 'john@example.com',
@@ -43,7 +48,11 @@ class AuthApiTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email']]);
+            ->assertJsonStructure([
+                'status',
+                'user' => ['id', 'name', 'email'],
+                'authorization' => ['token', 'type'],
+            ]);
     }
 
     public function test_login_fails_with_invalid_credentials(): void
@@ -58,16 +67,16 @@ class AuthApiTest extends TestCase
             'password' => 'wrong-password',
         ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(401);
     }
 
     public function test_authenticated_user_can_access_me_endpoint(): void
     {
         $user = User::factory()->create();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = auth()->login($user);
 
         $response = $this
-            ->withHeader('Authorization', 'Bearer '.$token)
+            ->withToken($token)
             ->getJson('/api/me');
 
         $response
@@ -78,14 +87,18 @@ class AuthApiTest extends TestCase
     public function test_authenticated_user_can_logout_and_token_is_revoked(): void
     {
         $user = User::factory()->create();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = auth()->login($user);
 
         $logoutResponse = $this
-            ->withHeader('Authorization', 'Bearer '.$token)
+            ->withToken($token)
             ->postJson('/api/logout');
 
-        $logoutResponse->assertNoContent();
+        $logoutResponse->assertOk();
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $meResponse = $this
+            ->withToken($token)
+            ->getJson('/api/me');
+
+        $meResponse->assertUnauthorized();
     }
 }

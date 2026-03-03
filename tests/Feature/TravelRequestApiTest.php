@@ -8,24 +8,29 @@ use App\Models\User;
 use App\Notifications\TravelRequestStatusUpdatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class TravelRequestApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function jwtFor(User $user): string
+    {
+        return auth()->login($user);
+    }
+
     public function test_user_can_create_travel_request(): void
     {
         $user = User::factory()->create();
+        $token = $this->jwtFor($user);
 
-        Sanctum::actingAs($user);
-
-        $response = $this->postJson('/api/travel-requests', [
-            'destination' => 'Recife',
-            'departure_date' => '2026-04-10',
-            'return_date' => '2026-04-15',
-        ]);
+        $response = $this
+            ->withToken($token)
+            ->postJson('/api/travel-requests', [
+                'destination' => 'Recife',
+                'departure_date' => '2026-04-10',
+                'return_date' => '2026-04-15',
+            ]);
 
         $response
             ->assertCreated()
@@ -47,9 +52,11 @@ class TravelRequestApiTest extends TestCase
             'requester_name' => $user->name,
         ]);
 
-        Sanctum::actingAs($user);
+        $token = $this->jwtFor($user);
 
-        $response = $this->getJson("/api/travel-requests/{$travelRequest->id}");
+        $response = $this
+            ->withToken($token)
+            ->getJson("/api/travel-requests/{$travelRequest->id}");
 
         $response
             ->assertOk()
@@ -78,9 +85,11 @@ class TravelRequestApiTest extends TestCase
             'return_date' => '2026-06-04',
         ]);
 
-        Sanctum::actingAs($user);
+        $token = $this->jwtFor($user);
 
-        $response = $this->getJson('/api/travel-requests?status=requested&destination=Paulo&travel_from=2026-05-01&travel_to=2026-05-30');
+        $response = $this
+            ->withToken($token)
+            ->getJson('/api/travel-requests?status=requested&destination=Paulo&travel_from=2026-05-01&travel_to=2026-05-30');
 
         $response
             ->assertOk()
@@ -93,6 +102,7 @@ class TravelRequestApiTest extends TestCase
     {
         $requester = User::factory()->create();
         $nonAdmin = User::factory()->create();
+        $token = $this->jwtFor($nonAdmin);
 
         $travelRequest = TravelRequest::factory()->create([
             'requester_id' => $requester->id,
@@ -100,11 +110,11 @@ class TravelRequestApiTest extends TestCase
             'status' => TravelRequestStatus::Requested,
         ]);
 
-        Sanctum::actingAs($nonAdmin);
-
-        $response = $this->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
-            'status' => TravelRequestStatus::Approved->value,
-        ]);
+        $response = $this
+            ->withToken($token)
+            ->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
+                'status' => TravelRequestStatus::Approved->value,
+            ]);
 
         $response->assertForbidden();
     }
@@ -115,6 +125,7 @@ class TravelRequestApiTest extends TestCase
 
         $requester = User::factory()->create();
         $admin = User::factory()->create(['is_admin' => true]);
+        $token = $this->jwtFor($admin);
 
         $travelRequest = TravelRequest::factory()->create([
             'requester_id' => $requester->id,
@@ -122,11 +133,11 @@ class TravelRequestApiTest extends TestCase
             'status' => TravelRequestStatus::Requested,
         ]);
 
-        Sanctum::actingAs($admin);
-
-        $response = $this->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
-            'status' => TravelRequestStatus::Approved->value,
-        ]);
+        $response = $this
+            ->withToken($token)
+            ->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
+                'status' => TravelRequestStatus::Approved->value,
+            ]);
 
         $response
             ->assertOk()
@@ -138,6 +149,7 @@ class TravelRequestApiTest extends TestCase
     public function test_admin_cannot_change_status_of_own_request(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
+        $token = $this->jwtFor($admin);
 
         $travelRequest = TravelRequest::factory()->create([
             'requester_id' => $admin->id,
@@ -145,11 +157,11 @@ class TravelRequestApiTest extends TestCase
             'status' => TravelRequestStatus::Requested,
         ]);
 
-        Sanctum::actingAs($admin);
-
-        $response = $this->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
-            'status' => TravelRequestStatus::Approved->value,
-        ]);
+        $response = $this
+            ->withToken($token)
+            ->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
+                'status' => TravelRequestStatus::Approved->value,
+            ]);
 
         $response->assertForbidden();
     }
@@ -158,6 +170,7 @@ class TravelRequestApiTest extends TestCase
     {
         $requester = User::factory()->create();
         $admin = User::factory()->create(['is_admin' => true]);
+        $token = $this->jwtFor($admin);
 
         $travelRequest = TravelRequest::factory()->create([
             'requester_id' => $requester->id,
@@ -165,11 +178,11 @@ class TravelRequestApiTest extends TestCase
             'status' => TravelRequestStatus::Approved,
         ]);
 
-        Sanctum::actingAs($admin);
-
-        $response = $this->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
-            'status' => TravelRequestStatus::Cancelled->value,
-        ]);
+        $response = $this
+            ->withToken($token)
+            ->patchJson("/api/travel-requests/{$travelRequest->id}/status", [
+                'status' => TravelRequestStatus::Cancelled->value,
+            ]);
 
         $response->assertStatus(422);
     }
