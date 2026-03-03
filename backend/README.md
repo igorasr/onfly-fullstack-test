@@ -1,6 +1,6 @@
 # Onfly Fullstack Test
 
-API Laravel para gerenciamento de pedidos de viagem, com autenticação JWT, políticas de autorização e regras de negócio em camada de serviço.
+API Laravel para gerenciamento de pedidos de viagem com autenticação JWT.
 
 ## Stack
 
@@ -12,75 +12,70 @@ API Laravel para gerenciamento de pedidos de viagem, com autenticação JWT, pol
 
 ## Requisitos
 
+### Local (sem Docker)
+
 - PHP 8.2+
 - Composer
 - Node.js 20+
 - NPM
-- MySQL 8 e Redis (para execução local)
+- MySQL 8
+- Redis
 
-## Como rodar o projeto
+### Docker
 
-### Opção 1: Local (sem Docker)
+- Docker + Docker Compose
 
-1. Clone o projeto e entre na pasta.
-2. Instale dependências backend:
+## Como subir a aplicação
 
-```bash
-composer install
-```
-
-3. Configure ambiente:
+### 1) Ambiente local (sem Docker)
 
 ```bash
 cp .env.example .env
-php artisan key:generate
-php artisan jwt:secret
-```
-
-4. Ajuste as credenciais do banco no `.env`.
-5. Rode migrations:
-
-```bash
-php artisan migrate
-```
-
-6. Instale dependências frontend (Vite):
-
-```bash
+composer install
 npm install
 ```
 
-7. Suba a aplicação:
+Configure o `.env` para seu banco/redis locais (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`).
 
 ```bash
-composer run dev
+php artisan key:generate
+php artisan jwt:secret
+php artisan migrate
+php artisan serve
 ```
 
-> A API ficará disponível em `http://localhost:8000` (modo local padrão do `artisan serve`).
+API disponível em: `http://localhost:8000`
 
-### Opção 2: Docker
+> Alternativa para subir backend + queue + logs + vite: `composer run dev`
 
-1. Configure o `.env`:
+### 2) Ambiente Docker
 
 ```bash
 cp .env.example .env
-php artisan key:generate
-php artisan jwt:secret
 ```
 
-2. Suba os containers:
+No `.env`, use os valores para comunicação entre containers:
+
+```dotenv
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=admin
+DB_PASSWORD=root
+REDIS_HOST=redis
+```
+
+Suba os containers e prepare a aplicação dentro do container `app`:
 
 ```bash
 docker compose up -d --build
-```
-
-3. Rode migrations dentro do container da aplicação:
-
-```bash
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan jwt:secret
 docker compose exec app php artisan migrate
 ```
 
-> A API ficará disponível em `http://localhost:8989`.
+API disponível em: `http://localhost:8989`
 
 ## Rodando testes
 
@@ -90,7 +85,7 @@ php artisan test --compact
 
 ## Autenticação
 
-O projeto usa `guard` `api` com driver JWT.
+Guard usado: `api` com driver `jwt`.
 
 - Rotas públicas:
 	- `POST /api/register`
@@ -98,15 +93,16 @@ O projeto usa `guard` `api` com driver JWT.
 - Rotas autenticadas:
 	- `GET /api/me`
 	- `POST /api/logout`
-	- CRUD de `travel-requests`
+	- `PATCH /api/travel-requests/{id}/status`
+	- `GET|POST|PUT|PATCH|DELETE /api/travel-requests`
 
-Após login/registro, envie o token no header:
+Use o token JWT no header:
 
 ```http
 Authorization: Bearer SEU_TOKEN
 ```
 
-## Exemplos de requisição
+## Payloads e respostas
 
 Considere:
 
@@ -114,137 +110,255 @@ Considere:
 BASE_URL=http://localhost:8989
 ```
 
-Se estiver rodando local sem Docker, use `http://localhost:8000`.
+Se estiver em local sem Docker, use `http://localhost:8000`.
 
 ### 1) Registrar usuário
 
-```bash
-curl -X POST "$BASE_URL/api/register" \
-	-H "Content-Type: application/json" \
-	-d '{
+`POST /api/register`
+
+Payload:
+
+```json
+{
+	"name": "John Doe",
+	"email": "john@example.com",
+	"password": "password123",
+	"password_confirmation": "password123"
+}
+```
+
+Resposta `200` (exemplo):
+
+```json
+{
+	"status": "success",
+	"message": "User created successfully",
+	"user": {
+		"id": 1,
 		"name": "John Doe",
 		"email": "john@example.com",
-		"password": "password123",
-		"password_confirmation": "password123"
-	}'
+		"is_admin": false,
+		"created_at": "2026-03-03T12:00:00.000000Z",
+		"updated_at": "2026-03-03T12:00:00.000000Z"
+	},
+	"authorization": {
+		"token": "<jwt>",
+		"type": "bearer"
+	}
+}
 ```
 
 ### 2) Login
 
-```bash
-curl -X POST "$BASE_URL/api/login" \
-	-H "Content-Type: application/json" \
-	-d '{
+`POST /api/login`
+
+Payload:
+
+```json
+{
+	"email": "john@example.com",
+	"password": "password123"
+}
+```
+
+Resposta `200` (exemplo):
+
+```json
+{
+	"status": "success",
+	"user": {
+		"id": 1,
+		"name": "John Doe",
 		"email": "john@example.com",
-		"password": "password123"
-	}'
+		"is_admin": false,
+		"created_at": "2026-03-03T12:00:00.000000Z",
+		"updated_at": "2026-03-03T12:00:00.000000Z"
+	},
+	"authorization": {
+		"token": "<jwt>",
+		"type": "bearer"
+	}
+}
 ```
 
-### 3) Usuário autenticado (`/me`)
+Resposta `401` (credenciais inválidas):
 
-```bash
-curl -X GET "$BASE_URL/api/me" \
-	-H "Authorization: Bearer SEU_TOKEN"
+```json
+{
+	"status": "error",
+	"message": "Unauthorized"
+}
 ```
+
+### 3) Me
+
+`GET /api/me`
+
+Resposta `200`: objeto do usuário autenticado.
 
 ### 4) Logout
 
-```bash
-curl -X POST "$BASE_URL/api/logout" \
-	-H "Authorization: Bearer SEU_TOKEN"
+`POST /api/logout`
+
+Resposta `200`:
+
+```json
+{
+	"status": "success",
+	"message": "Successfully logged out"
+}
 ```
 
 ### 5) Criar pedido de viagem
 
-```bash
-curl -X POST "$BASE_URL/api/travel-requests" \
-	-H "Authorization: Bearer SEU_TOKEN" \
-	-H "Content-Type: application/json" \
-	-d '{
+`POST /api/travel-requests`
+
+Payload:
+
+```json
+{
+	"destination": "Recife",
+	"departure_date": "2026-04-10",
+	"return_date": "2026-04-15"
+}
+```
+
+Resposta `201` (formato `TravelRequestResource`):
+
+```json
+{
+	"data": {
+		"id": 10,
+		"requester_id": 1,
+		"requester_name": "John Doe",
 		"destination": "Recife",
-		"departure_date": "2026-04-10",
-		"return_date": "2026-04-15"
-	}'
+		"departure_date": "2026-04-10T00:00:00.000000Z",
+		"return_date": "2026-04-15T00:00:00.000000Z",
+		"status": "requested",
+		"requester": {
+			"id": 1,
+			"name": "John Doe",
+			"email": "john@example.com"
+		}
+	}
+}
 ```
 
-### 6) Consultar pedido por ID
+### 6) Listar pedidos (com filtros)
 
-```bash
-curl -X GET "$BASE_URL/api/travel-requests/1" \
-	-H "Authorization: Bearer SEU_TOKEN"
-```
+`GET /api/travel-requests`
 
-### 7) Listar pedidos com filtros
-
-Filtros disponíveis:
+Filtros válidos:
 
 - `status`: `requested`, `approved`, `cancelled`
-- `destination`: texto parcial
+- `destination`: busca parcial
 - `created_from`, `created_to`: período de criação
 - `travel_from`, `travel_to`: período de viagem
 
 Exemplo:
 
 ```bash
-curl -X GET "$BASE_URL/api/travel-requests?status=requested&destination=Recife&travel_from=2026-04-01&travel_to=2026-04-30" \
+curl -X GET "$BASE_URL/api/travel-requests?status=requested&destination=Paulo&travel_from=2026-05-01&travel_to=2026-05-30" \
 	-H "Authorization: Bearer SEU_TOKEN"
 ```
 
-### 8) Atualizar pedido (sem alterar status)
+Resposta `200`:
 
-```bash
-curl -X PUT "$BASE_URL/api/travel-requests/1" \
-	-H "Authorization: Bearer SEU_TOKEN" \
-	-H "Content-Type: application/json" \
-	-d '{
-		"destination": "Fortaleza",
-		"departure_date": "2026-05-01",
-		"return_date": "2026-05-10"
-	}'
+```json
+{
+	"data": [
+		{
+			"id": 10,
+			"requester_id": 1,
+			"requester_name": "John Doe",
+			"destination": "São Paulo",
+			"departure_date": "2026-05-10T00:00:00.000000Z",
+			"return_date": "2026-05-14T00:00:00.000000Z",
+			"status": "requested",
+			"requester": {
+				"id": 1,
+				"name": "John Doe",
+				"email": "john@example.com"
+			}
+		}
+	]
+}
 ```
+
+### 7) Consultar por ID
+
+`GET /api/travel-requests/{id}`
+
+Resposta `200`: mesmo formato do item de criação (`data` com `TravelRequestResource`).
+
+### 8) Atualizar pedido
+
+`PUT/PATCH /api/travel-requests/{id}`
+
+Payload permitido (todos opcionais):
+
+- `destination`
+- `departure_date`
+- `return_date`
+
+Campos proibidos neste endpoint:
+
+- `status`
+- `requester_name`
+- `requester_id`
 
 ### 9) Atualizar status do pedido
 
-Endpoint:
+`PATCH /api/travel-requests/{id}/status`
 
-- `PATCH /api/travel-requests/{id}/status`
+Payload:
 
-Payload permitido:
+```json
+{
+	"status": "approved"
+}
+```
+
+Valores permitidos para `status`:
 
 - `approved`
 - `cancelled`
 
-Exemplo:
-
-```bash
-curl -X PATCH "$BASE_URL/api/travel-requests/1/status" \
-	-H "Authorization: Bearer SEU_TOKEN" \
-	-H "Content-Type: application/json" \
-	-d '{
-		"status": "approved"
-	}'
-```
+Resposta `200`: formato `TravelRequestResource`.
 
 ### 10) Remover pedido
 
-```bash
-curl -X DELETE "$BASE_URL/api/travel-requests/1" \
-	-H "Authorization: Bearer SEU_TOKEN"
-```
+`DELETE /api/travel-requests/{id}`
 
-## Regras de negócio importantes
+Resposta `204` (sem corpo).
 
-- Status inicial do pedido: `requested`.
-- Somente usuário administrador pode alterar status.
-- usuário que fez o pedido não pode alterar o status do mesmo, somente um usuário administrador.
-- Não é permitido cancelar pedido já aprovado.
-- Sempre que o status mudar para `approved` ou `cancelled`, o solicitante recebe notificação.
+## Regras de negócio
+
+- Status inicial ao criar pedido: `requested`.
+- Transições de status permitidas:
+	- `requested -> approved`
+	- `requested -> cancelled`
+- Transições não permitidas:
+	- qualquer transição a partir de `approved`
+	- qualquer transição a partir de `cancelled`
+	- manter o mesmo status atual
+- Apenas usuário `is_admin = true` pode atualizar status.
+- Ao atualizar status com sucesso, o solicitante recebe notificação por e-mail.
+- Atualização comum (`PUT/PATCH /travel-requests/{id}`) não permite alterar `status` nem dados de solicitante.
+
+## Erros comuns
+
+- `401 Unauthorized`: token ausente/inválido ou login inválido.
+- `403 Forbidden`: usuário sem permissão (ex.: não admin tentando alterar status).
+- `422 Unprocessable Entity`: erro de validação ou transição de status inválida.
 
 ## Estrutura principal
 
-- `app/Http/Controllers/AuthController.php`: fluxo de registro/login/me/logout.
-- `app/Http/Controllers/TravelRequestController.php`: endpoints de pedidos.
-- `app/Services/TravelRequestService.php`: regras de negócio dos pedidos.
-- `app/TravelRequestFiltersData.php`: estrutura de filtros da listagem.
-- `app/Policies/TravelRequestPolicy.php`: autorização de acesso.
+- `app/Http/Controllers/AuthController.php`
+- `app/Http/Controllers/TravelRequestController.php`
+- `app/Http/Requests/*`
+- `app/Http/Resources/TravelRequestResource.php`
+- `app/Services/TravelRequestService.php`
+- `app/DTOs/TravelRequestFiltersData.php`
+- `app/Enums/TravelRequestStatus.php`
 
