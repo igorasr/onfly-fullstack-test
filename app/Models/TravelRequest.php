@@ -43,15 +43,8 @@ class TravelRequest extends Model
 
     private function changeStatus(TravelRequestStatus $newStatus): self
     {
-        if (!$newStatus) {
-            throw ValidationException::withMessages([
-                'status' => "Status '{$newStatus->value}' inválido.",
-            ]);
-        }
-
-        $current = $this->status;
-        if (!$current->canTransitionTo($newStatus)) {
-            throw new InvalidStatusTransition($current->value, $newStatus->value);
+        if (!$this->status->canTransitionTo($newStatus)) {
+            throw new InvalidStatusTransition($this->status->value, $newStatus->value);
         }
 
         $this->status = $newStatus;

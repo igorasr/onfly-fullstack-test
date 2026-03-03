@@ -13,8 +13,8 @@ enum TravelRequestStatus: string
     {
         return match ($this) {
             self::Requested => in_array($to, [self::Approved, self::Cancelled], true),
-            self::Approved   => $to === self::Cancelled,
-            self::Cancelled  => $to === self::Requested
+            self::Approved   => false,
+            self::Cancelled  => false
         };
     }
 
