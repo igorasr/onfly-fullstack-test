@@ -39,20 +39,4 @@ class TravelRequestPolicy
     {
         return $this->travelRequestService->canUpdateStatus($user, $travelRequest);
     }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, TravelRequest $travelRequest): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, TravelRequest $travelRequest): bool
-    {
-        return false;
-    }
 }
