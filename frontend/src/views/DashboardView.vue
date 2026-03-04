@@ -1,12 +1,12 @@
 <template lang="">
 <div class="min-h-screen bg-background">
       <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <DashboardHeader />
+        <DashboardHeader :onCreateClick="openModal"/>
 
         <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-center gap-3">
             <label class="text-sm font-medium text-foreground">Filtrar por status:</label>
-            <!-- <StatusFilter v-model="statusFilter" /> -->
+            <StatusFilter v-model="storeStatusFilter" />
           </div>
           <button
             @click="refresh"
@@ -23,34 +23,43 @@
           <OrdersTable :orders="ordersStore.orders" :loading="ordersStore.loading"/>
         </div>
 
-        <!-- <div
-          v-if="ordersStore.error"
-          class="mt-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800"
-        >
-          {{ ordersStore.error }}
-        </div>
-
-        <CreateOrderModal :open="showModal" @close="closeModal" /> -->
+        <CreateOrderForm :open="showModal" @close="closeModal" />
       </div>
     </div>
 </template>
 <script setup lang="ts">
-  import DashboardHeader from '@/components/DashboardHeader.vue'
-  import OrdersTable from  '@/components/OrdersTable.vue' 
-  import { onMounted } from 'vue';
-  import { useOrdersStore } from '@/stores/orders';
+import DashboardHeader from '@/components/DashboardHeader.vue'
+import OrdersTable from '@/components/OrdersTable.vue'
+import StatusFilter from '@/components/StatusFilter.vue'
+import CreateOrderForm from '@/components/CreateOrderForm.vue'
+import { onMounted, ref, watch } from 'vue';
+import { useOrdersStore } from '@/stores/orders';
+import { TravelRequestStatus } from '@/types';
+import { storeToRefs } from 'pinia';
 
-  const ordersStore = useOrdersStore()
+const ordersStore = useOrdersStore()
 
-  onMounted(() => {
-      ordersStore.fetchOrders()
-  })
+const { statusFilter: storeStatusFilter } = storeToRefs(ordersStore)
 
-  function refresh() {
-    ordersStore.fetchOrders()
-  }
-  
+onMounted(() => {
+  ordersStore.fetchOrders()
+})
+
+const showModal = ref(false)
+
+function refresh() {
+  ordersStore.fetchOrders()
+}
+
+function openModal() {
+  showModal.value = true
+}
+
+function closeModal() {
+  refresh();
+  showModal.value = false
+}
 </script>
 <style lang="">
-  
+
 </style>
