@@ -2,6 +2,24 @@
 
 API Laravel para gerenciamento de pedidos de viagem com autenticação JWT.
 
+## Sumário
+
+- [Stack](#stack)
+- [Requisitos](#requisitos)
+	- [Local (sem Docker)](#local-sem-docker)
+	- [Docker](#docker)
+- [Como subir a aplicação (Backend)](#como-subir-a-aplicação-backend)
+	- [1) Ambiente local (sem Docker)](#1-ambiente-local-sem-docker)
+	- [2) Ambiente Docker](#2-ambiente-docker)
+- [Rodando testes](#rodando-testes)
+- [Autenticação](#autenticação)
+- [Payloads e respostas](#payloads-e-respostas)
+- [Regras de negócio](#regras-de-negócio)
+- [Como rodar o Front-end](#como-rodar-o-front-end)
+	- [Desenvolvimento](#desenvolvimento)
+	- [Build de produção](#build-de-produção)
+	- [Preview da build](#preview-da-build)
+
 ## Stack
 
 - PHP 8.2+
@@ -25,7 +43,7 @@ API Laravel para gerenciamento de pedidos de viagem com autenticação JWT.
 
 - Docker + Docker Compose
 
-## Como subir a aplicação
+## Como subir a aplicação (Backend)
 
 ### 1) Ambiente local (sem Docker)
 
@@ -346,19 +364,37 @@ Resposta `204` (sem corpo).
 - Ao atualizar status com sucesso, o solicitante recebe notificação por e-mail.
 - Atualização comum (`PUT/PATCH /travel-requests/{id}`) não permite alterar `status` nem dados de solicitante.
 
-## Erros comuns
+## Como rodar o Front-end
 
-- `401 Unauthorized`: token ausente/inválido ou login inválido.
-- `403 Forbidden`: usuário sem permissão (ex.: não admin tentando alterar status).
-- `422 Unprocessable Entity`: erro de validação ou transição de status inválida.
+O front-end está na pasta `frontend` e usa Vue + Vite.
 
-## Estrutura principal
+Pré-requisitos:
 
-- `app/Http/Controllers/AuthController.php`
-- `app/Http/Controllers/TravelRequestController.php`
-- `app/Http/Requests/*`
-- `app/Http/Resources/TravelRequestResource.php`
-- `app/Services/TravelRequestService.php`
-- `app/DTOs/TravelRequestFiltersData.php`
-- `app/Enums/TravelRequestStatus.php`
+- Node.js `^20.19.0` ou `>=22.12.0`
+- NPM
+
+```bash
+cd frontend
+npm install
+```
+
+### Desenvolvimento
+
+```bash
+npm run dev
+```
+
+Abra a URL exibida no terminal (geralmente `http://localhost:5173`).
+
+### Build de produção
+
+```bash
+npm run build
+```
+
+### Preview da build
+
+```bash
+npm run preview
+```
 
