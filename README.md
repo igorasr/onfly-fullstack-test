@@ -48,6 +48,7 @@ API Laravel para gerenciamento de pedidos de viagem com autenticação JWT.
 ### 1) Ambiente local (sem Docker)
 
 ```bash
+cd backend
 cp .env.example .env
 composer install
 npm install
