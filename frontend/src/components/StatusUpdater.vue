@@ -66,7 +66,7 @@ const statusOptions: Record<TravelRequestStatus, { label: string; value: TravelR
 }
 
 async function onStatusChange(e: Event) {
-  debugger
+  
   const newStatus = (e.target as HTMLSelectElement).value as TravelRequestStatus
 
   if (newStatus === props.currentStatus) return

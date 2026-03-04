@@ -14,7 +14,7 @@ const toasts = ref<ToastItem[]>([])
 
 export function useToast() {
   function showToast(message: string, type: ToastType = 'success') {
-    debugger
+    
     const id = ++toastId
 
     toasts.value.push({ id, message, type })

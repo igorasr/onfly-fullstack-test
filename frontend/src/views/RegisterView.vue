@@ -71,6 +71,9 @@
   import { ref } from 'vue';
   import { useAuthStore } from '@/stores/auth'
   import { useRouter } from 'vue-router';
+  import { useToast } from '@/composables/useToast';
+  
+  const { showToast } = useToast()
 
   const auth = useAuthStore()
   const router = useRouter()
@@ -92,12 +95,13 @@
       passwordConfirmationError.value = 'As senhas não coincidem';
       return;
     }
-    
-    await auth.register(name.value, email.value, password.value, password_confirmation.value)
-    router.push({ name: 'login' })
+    try {
+      await auth.register(name.value, email.value, password.value, password_confirmation.value)
+      router.push({ name: 'login' })
+    } catch (error: unknown) {
+      const err = error as { message?: string }
+      showToast(err.message || 'Erro ao registrar. Tente novamente.', 'error')
+    }
   }
 
 </script>
-<style lang="">
-  
-</style>

@@ -65,6 +65,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import BaseInput from '@/components/BaseInput.vue';
+import { useToast } from '@/composables/useToast';
+
+const { showToast } = useToast()
 
 // import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
@@ -75,7 +78,7 @@ const email = ref('')
 const password = ref('')
 
 onMounted(() => {
-  // auth.clearError()
+  auth.clearError()
 })
 
 async function handleLogin() {
@@ -83,8 +86,8 @@ async function handleLogin() {
     
     await auth.login(email.value, password.value)
     router.push({ name: 'dashboard' })
-  } catch {
-    // Error is handled by the store
+  } catch (error){
+    showToast('Erro na autenticação, verifique suas credenciais e tente novamente.', 'error')
   }
 }
 </script>

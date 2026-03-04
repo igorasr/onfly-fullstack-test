@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useAuthStore } from './auth'
 import { TravelRequest, TravelRequestStatus } from '@/types'
-import { get, patch } from '@/services/api'
+import client from '@/services/api'
 
 export const useOrdersStore = defineStore('orders', () => {
   const orders = ref<TravelRequest[]>([])
@@ -18,7 +17,7 @@ export const useOrdersStore = defineStore('orders', () => {
       if (status) {
         params.status = status
       }
-      const result = await get('/travel-requests', params)
+      const result = await client.get('/travel-requests', params)
       orders.value = result.data
     } catch (err: any) {
       error.value = err.message || 'Erro ao buscar pedidos.'
@@ -45,7 +44,7 @@ export const useOrdersStore = defineStore('orders', () => {
     status: TravelRequestStatus
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await patch(`/travel-requests/${id}/status`, { status })
+      const response = await client.patch(`/travel-requests/${id}/status`, { status })
       const data = response.data
 
       const idx = orders.value.findIndex((o) => o.id === id)

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types'
-import { register as apiRegister, login as apiLogin, logout as apiLogout } from '@/services/api'
+import client from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('auth_token'))
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      const data = await apiRegister(name, email, password, password_confirmation)
+      const data = await client.post('/register', { name, email, password, password_confirmation })
       
       token.value = data.authorization.token
       user.value = data.user
@@ -42,14 +42,14 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      const data = await apiLogin({ email, password })
+      const data = await client.post('/login', { email, password })
       token.value = data.authorization.token
       user.value = data.user
       localStorage.setItem('auth_token', data.authorization.token)
       localStorage.setItem('auth_user', JSON.stringify(data.user))
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } }
-      error.value = axiosError.response?.data?.message || 'Credenciais invalidas. Tente novamente.'
+      error.value = axiosError.response?.data?.message || 'Verifique suas credenciais e tente novamente.'
       throw err
     } finally {
       loading.value = false
@@ -58,7 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      await apiLogout()
+      await client.post('/logout')
     } catch {
       // Proceed even if the API call fails
     } finally {
