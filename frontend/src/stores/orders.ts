@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { TravelRequest, TravelRequestStatus } from '@/types'
 import client from '@/services/api'
+import { useAuthStore } from './auth'
 
 export const useOrdersStore = defineStore('orders', () => {
   const orders = ref<TravelRequest[]>([])
@@ -66,5 +67,20 @@ export const useOrdersStore = defineStore('orders', () => {
     }
   }
 
-  return { orders, loading, error, statusFilter, fetchOrders, createOrder, updateTravelRequestStatus }
+  async function deleteOrder(id: number): Promise<{ success: boolean; error?: string }> {
+
+    if (!useAuthStore().userIsAdmin()) {
+      return { success: false, error: 'Você não tem permissão para deletar este pedido.' }
+    }
+
+    try {
+      await client.destroy(`/travel-requests/${id}`)
+      orders.value = orders.value.filter((o) => o.id !== id)
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Erro de conexao.' }
+    }
+  }
+
+  return { orders, loading, error, statusFilter, fetchOrders, createOrder, updateTravelRequestStatus, deleteOrder }
 })

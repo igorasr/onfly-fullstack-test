@@ -42,9 +42,9 @@ class TravelRequestService
         return $travelRequest->fresh()->load('requester');
     }
 
-    public function delete(TravelRequest $travelRequest): void
+    public function delete(TravelRequest $travelRequest): bool
     {
-        $travelRequest->delete();
+        return $travelRequest->delete();
     }
 
     public function updateStatus(TravelRequest $travelRequest, TravelRequestStatus $newStatus): TravelRequest
@@ -75,7 +75,7 @@ class TravelRequestService
 
     public function canDelete(User $user, TravelRequest $travelRequest): bool
     {
-        return $this->canView($user, $travelRequest);
+        return $user->is_admin;
     }
 
     public function canUpdateStatus(User $user, TravelRequest $travelRequest): bool

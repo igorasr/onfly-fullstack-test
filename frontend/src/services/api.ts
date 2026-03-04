@@ -57,9 +57,15 @@ async function patch(url: string, data?: any): Promise<any> {
   return request('PATCH', url, data)
 }
 
+async function destroy(url: string): Promise<any> {
+  return request('DELETE', url)
+}
+
+
 export default {
   get,
   post,
   patch,
+  destroy,
   request
 }

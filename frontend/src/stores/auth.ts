@@ -73,6 +73,10 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
+  function userIsAdmin(): boolean {
+    return user.value?.is_admin || false
+  }
+
   return {
     token,
     user,
@@ -83,5 +87,6 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     clearError,
+    userIsAdmin
   }
 })

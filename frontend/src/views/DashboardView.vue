@@ -20,7 +20,7 @@
         </div>
 
         <div class="mt-4">
-          <OrdersTable :orders="ordersStore.orders" :loading="ordersStore.loading"/>
+          <OrdersTable :orders="ordersStore.orders" :loading="ordersStore.loading" @delete-order="handleDeleteOrder"/>
         </div>
 
         <CreateOrderForm :open="showModal" @close="closeModal" />
@@ -36,6 +36,9 @@ import { onMounted, ref, watch } from 'vue';
 import { useOrdersStore } from '@/stores/orders';
 import { TravelRequestStatus } from '@/types';
 import { storeToRefs } from 'pinia';
+import { useToast } from '@/composables/useToast';
+
+const { showToast } = useToast()
 
 const ordersStore = useOrdersStore()
 
@@ -59,6 +62,18 @@ function closeModal() {
   refresh();
   showModal.value = false
 }
+
+async function handleDeleteOrder(id: number) {
+  const result = await ordersStore.deleteOrder(id)
+  if (!result.success) {
+    showToast(result.error || 'Erro ao deletar pedido.', 'error')
+    return
+  }
+
+  showToast('Pedido deletado com sucesso.', 'success')
+  refresh()
+}
+
 </script>
 <style lang="">
 
