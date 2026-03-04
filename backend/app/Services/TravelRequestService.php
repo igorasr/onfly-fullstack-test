@@ -51,7 +51,14 @@ class TravelRequestService
     {
         $travelRequest->setStatus($newStatus)->save();
 
-        $travelRequest->requester?->notify(new TravelRequestStatusUpdatedNotification($travelRequest));
+        try {
+            $travelRequest->requester?->notify(new TravelRequestStatusUpdatedNotification($travelRequest));
+        } catch (\Throwable $th) {
+            logger()->error('Failed to send notification for travel request status update', [
+                'travel_request_id' => $travelRequest->id,
+                'error' => $th->getMessage(),
+            ]);
+        }
 
         return $travelRequest->fresh()->load('requester');
     }
