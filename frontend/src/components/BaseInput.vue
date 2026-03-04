@@ -27,8 +27,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(
-  defineProps<{
+interface Props {
     modelValue: string
     label?: string
     name?: string
@@ -39,7 +38,10 @@ const props = withDefaults(
     disabled?: boolean
     required?: boolean
     error?: string
-  }>(),
+}
+
+const props = withDefaults(
+  defineProps<Props>(),
   {
     type: 'text',
     autocomplete: 'off',
@@ -66,7 +68,3 @@ function onInput(event: Event) {
   emit('update:modelValue', target.value)
 }
 </script>
-
-<style scoped>
-
-</style>
