@@ -30,19 +30,19 @@ class TravelRequestController extends Controller
     {
         $travelRequest = $this->travelRequestService->create($request->user(), $request->validated());
 
-        return new TravelRequestResource($travelRequest)->response()->setStatusCode(201);
+        return $travelRequest->toTravelRequestResource()->response()->setStatusCode(201);
     }
 
     public function show(TravelRequest $travelRequest): JsonResponse
     {
-        return new TravelRequestResource($travelRequest->load('requester'))->response();
+        return $travelRequest->load('requester')->toTravelRequestResource()->response();
     }
 
     public function update(UpdateTravelRequestRequest $request, TravelRequest $travelRequest): JsonResponse
     {
         $travelRequest = $this->travelRequestService->update($travelRequest, $request->validated());
 
-        return new TravelRequestResource($travelRequest)
+        return $travelRequest->toTravelRequestResource()
             ->response()
             ->setStatusCode(Response::HTTP_OK);
     }
@@ -59,7 +59,7 @@ class TravelRequestController extends Controller
         $newStatus = TravelRequestStatus::from($request->validated('status'));
         $travelRequest = $this->travelRequestService->updateStatus($travelRequest, $newStatus);
 
-        return new TravelRequestResource($travelRequest)
+        return $travelRequest->toTravelRequestResource()
             ->response()
             ->setStatusCode(Response::HTTP_OK);
     }

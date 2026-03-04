@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginUserRequest;
 use App\Http\Requests\RegisterUserRequest;
+use App\Http\Resources\AuthResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,15 +25,10 @@ class AuthController extends Controller
 
         $token = auth()->login($user);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'User created successfully',
+        return (new AuthResource([
             'user' => $user,
-            'authorization' => [
-                'token' => $token,
-                'type' => 'bearer',
-            ]
-        ]);
+            'token' => $token,
+        ]))->response()->setStatusCode(Response::HTTP_CREATED);
     }
 
     public function login(LoginUserRequest $request): JsonResponse
@@ -49,14 +45,10 @@ class AuthController extends Controller
 
         $user = auth()->user();
 
-        return response()->json([
-                'status' => 'success',
-                'user' => $user,
-                'authorization' => [
-                    'token' => $token,
-                    'type' => 'bearer',
-                ]
-            ]);
+        return (new AuthResource([
+            'user' => $user,
+            'token' => $token,
+        ]))->response()->setStatusCode(Response::HTTP_OK);
     }
 
     public function me(Request $request): JsonResponse
@@ -70,18 +62,6 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Successfully logged out',
-        ]);
-    }
-
-    public function refresh()
-    {
-        return response()->json([
-            'status' => 'success',
-            'user' => auth()->user(),
-            'authorization' => [
-                'token' => auth()->refresh(),
-                'type' => 'bearer',
-            ]
         ]);
     }
 }
